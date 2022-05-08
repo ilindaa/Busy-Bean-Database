@@ -1,0 +1,299 @@
+CREATE TABLE EMPLOYEE (
+EmployeeID		Int			NOT NULL,
+FirstName		Char(35)		NOT NULL,
+LastName		Varchar(35)		NOT NULL,
+Address		Varchar(45)		NOT NULL,
+Phone			Varchar(30)		NOT NULL,
+Email			Varchar(50)		NULL,
+HourlyWage		Numeric(5,2)		NOT NULL,
+CONSTRAINT    EmployeePK       PRIMARY KEY (EmployeeID),
+CONSTRAINT    EmployeeAK1     UNIQUE (LastName, FirstName)
+);
+
+CREATE TABLE EMPLOYEE_HOURS(
+EmployeeID    	Int    	NOT NULL,
+DateWorked    	Date    	NOT NULL,
+HoursWorked    	Int    	NOT NULL,
+CONSTRAINT    	E_HIntPK	PRIMARY KEY(EmployeeID, DateWorked),
+CONSTRAINT    	E_HIntFK    	FOREIGN KEY(EmployeeID)
+        	REFERENCES EMPLOYEE(EmployeeID)
+        	ON DELETE CASCADE
+);
+
+CREATE TABLE ORDERS (
+      OrderNumber             Int             NOT NULL,
+      EmployeeID            Int                NOT NULL,
+      OrderDate                Date            NOT NULL, 
+      OrderSubtotal         Numeric(5,2)        NOT NULL,
+      TotalTax                 Numeric(5,2)        NOT NULL,
+      Total                 Numeric(5,2)        NOT NULL,
+      CONSTRAINT             OrderPK            PRIMARY KEY(OrderNumber),
+      CONSTRAINT             OrderFK            FOREIGN KEY(EmployeeID)
+                                            REFERENCES EMPLOYEE(EmployeeID),
+      CONSTRAINT     ValidTotal  CHECK ((OrderSubtotal + TotalTax = Total) AND (Total < 1000.00) AND (Total >= 0.00))
+      );
+
+CREATE TABLE ITEM (
+ItemID   		 Int   	 	NOT NULL,
+ItemName   	 	Char(45)    	NOT NULL,
+Price   		 	Numeric(5,2)    	NOT NULL,
+CONSTRAINT   	ItemPK   	PRIMARY KEY(ItemID)
+);
+
+CREATE TABLE ORDER_ITEM (
+      OrderNumber             Int             NOT NULL,
+      ItemID                	Int                NOT NULL,
+      ItemQuantity            Int                NOT NULL, 
+      Price                 Numeric(5,2)        NOT NULL,
+      ExtendedPrice         Numeric(5,2)        NOT NULL,
+      CONSTRAINT             Order_ItemPK    PRIMARY KEY(OrderNumber, ItemID),
+      CONSTRAINT             OrderFK1        FOREIGN KEY(OrderNumber)
+                                            REFERENCES ORDERS(OrderNumber),
+      CONSTRAINT             OrderFK2        FOREIGN KEY(ItemID)
+                                            REFERENCES ITEM(ItemID),
+      CONSTRAINT     ValidQuantity  CHECK ( ItemQuantity > 0)
+      ); 
+
+CREATE TABLE INGREDIENT(
+IngredientID            Int            NOT NULL,
+IngredientName            Char (35)            NOT NULL,
+IngredientCategory            Char (35)            NULL,
+IngredientCost            Numeric(3, 2)            NOT NULL,
+QuantityOnHand            Int            NOT NULL,
+CONSTRAINT            IngredientPK            PRIMARY KEY(IngredientID),
+CONSTRAINT            IngCategoryConstraint            CHECK(IngredientCategory IN ('Coffee Beans', 'Dairy', 'Coffee Creamers', 'Other')),
+CONSTRAINT            IngCostConstraint            CHECK((IngredientCost >= 0.01) AND (IngredientCost <= 0.60)),
+CONSTRAINT            QOHConstraint            CHECK(QuantityOnHand >= 0)
+);
+
+CREATE TABLE INGREDIENT_USE(
+ItemID            Int            NOT NULL,
+IngredientID            Int            NOT NULL,
+AmountIngredientUsed            Int            NULL,
+CONSTRAINT            Ingredient_UsePK            PRIMARY KEY(ItemID, IngredientID),
+CONSTRAINT            ItemFK1            FOREIGN KEY(ItemID)
+REFERENCES ITEM(ItemID),
+CONSTRAINT            ItemFK2            FOREIGN KEY(IngredientID)
+REFERENCES INGREDIENT(IngredientID),
+CONSTRAINT            AIUConstraint            CHECK(AmountIngredientUsed >= 0)
+);
+
+
+/*            INSERT INTO EMPLOYEE TABLE            */
+CREATE SEQUENCE seqEID Increment by 1 start with 1;
+INSERT INTO EMPLOYEE
+( EmployeeID, FirstName, LastName, Address, Phone, Email, HourlyWage)
+VALUES(seqEID.NextVal, 'Joe', 'Smith', '123 Oak Street Hammonton NJ 08037', '856-834-5000', 'jsmith5000@gmail.com', 15.00);
+
+INSERT INTO EMPLOYEE 
+( EmployeeID, FirstName, LastName, Address, Phone, Email, HourlyWage)
+VALUES(seqEID.NextVal, 'Keil', 'Barracliffe', '400 Newton Ave Oaklyn NJ 08107', '856-783-2666', 'keil.barracliffe@gmail.com', 15.00);
+
+INSERT INTO EMPLOYEE 
+( EmployeeID, FirstName, LastName, Address, Phone, Email, HourlyWage)
+VALUES(seqEID.NextVal, 'Linda', 'Mei', '1000 Beach Street Atlantic City NJ 08201', '609-434-5000', 'linda_mei@gmail.com', 17.50);
+
+INSERT INTO EMPLOYEE 
+( EmployeeID, FirstName, LastName, Address, Phone, Email, HourlyWage)
+VALUES(seqEID.NextVal, 'Freidalyz', 'Mojica', '999 Boardwalk Ave Atlantic City NJ 08201', '609-434-1800', 'mojica.freida@gmail.com', 16.75);
+
+INSERT INTO EMPLOYEE 
+( EmployeeID, FirstName, LastName, Address, Phone, Email, HourlyWage)
+VALUES(seqEID.NextVal, 'Jacob', 'Parratto', '500 Brown Rd Egg Harbor Twp NJ 08234', '856-939-9494', 'jp@gmail.com', 19.00);
+
+/*            INSERT INTO EMPLOYEE_HOURS TABLE            */
+INSERT INTO EMPLOYEE_HOURS
+	(EmployeeID, DateWorked, HoursWorked)
+	VALUES(1, TO_DATE('04/25/2022', 'MM/DD/YYYY'), 24);
+
+INSERT INTO EMPLOYEE_HOURS
+	(EmployeeID, DateWorked, HoursWorked)
+	VALUES(2, TO_DATE('04/26/2022', 'MM/DD/YYYY'), 32);
+
+INSERT INTO EMPLOYEE_HOURS
+	(EmployeeID, DateWorked, HoursWorked)
+	VALUES(3, TO_DATE('04/27/2022', 'MM/DD/YYYY'), 40);
+
+INSERT INTO EMPLOYEE_HOURS
+	(EmployeeID, DateWorked, HoursWorked)
+	VALUES(4, TO_DATE('04/29/2022', 'MM/DD/YYYY'), 18);
+
+INSERT INTO EMPLOYEE_HOURS
+	(EmployeeID, DateWorked, HoursWorked)
+	VALUES(5, TO_DATE('04/29/2022', 'MM/DD/YYYY'), 40);
+
+/*            INSERT data for ORDERS            */
+Create Sequence seqOrderNum Increment by 1 start with 1;
+INSERT INTO ORDERS
+	(OrderNumber, EmployeeID, OrderDate, OrderSubtotal, TotalTax,
+	 Total)
+	VALUES (
+seqOrderNum.NextVal, 1, '10-APRIL-2022', 9.50, 0.67, 10.17);
+	
+INSERT INTO ORDERS
+	(OrderNumber, EmployeeID, OrderDate, OrderSubtotal, TotalTax,
+	 Total)
+	VALUES (
+	seqOrderNum.NextVal, 2, '11-APRIL-2022', 3.00, 0.21, 3.21);
+
+INSERT INTO ORDERS
+	(OrderNumber, EmployeeID, OrderDate, OrderSubtotal, TotalTax,
+	 Total)
+	VALUES (
+	seqOrderNum.NextVal, 3, '12-APRIL-2022', 5.50, 0.39, 5.89);
+	
+INSERT INTO ORDERS
+	(OrderNumber, EmployeeID, OrderDate, OrderSubtotal, TotalTax,
+	 Total)
+	VALUES (
+	seqOrderNum.NextVal, 4, '13-APRIL-2022', 10.75, 0.75, 11.50);
+	
+INSERT INTO ORDERS
+	(OrderNumber, EmployeeID, OrderDate, OrderSubtotal, TotalTax,
+	 Total)
+	VALUES (
+	seqOrderNum.NextVal, 5, '14-APRIL-2022', 6.00, 0.42, 6.42);
+
+
+/*            INSERT data for ITEM            */
+CREATE SEQUENCE seqIID Increment by 1 start with 1;
+
+INSERT INTO ITEM
+	(ItemID, ItemName, Price)
+	VALUES(seqIID.NextVal, 'Black Coffee','3.00');
+INSERT INTO ITEM
+	(ItemID, ItemName, Price)
+	VALUES(seqIID.NextVal, 'Iced Coffee', '3.75');
+INSERT INTO ITEM
+	(ItemID, ItemName, Price)
+	VALUES(seqIID.NextVal, 'Espresso', '2.50');
+INSERT INTO ITEM
+	(ItemID, ItemName, Price)
+	VALUES(seqIID.NextVal, 'Steamed Milk', '1.75');
+INSERT INTO ITEM
+	(ItemID, ItemName, Price)
+	VALUES(seqIID.NextVal, 'Bagels', '1.50');
+INSERT INTO ITEM
+	(ItemID, ItemName, Price)
+	VALUES(seqIID.NextVal, 'Scones', '2.00');
+INSERT INTO ITEM
+	(ItemID, ItemName, Price)
+	VALUES(seqIID.NextVal, 'Cookies', '3.00');
+
+/*            INSERT data for ORDER_ITEM            */
+INSERT INTO ORDER_ITEM
+	(OrderNumber, ItemID, Price, ItemQuantity,
+	 ExtendedPrice)
+	VALUES (
+	00001, 001, 3.00, 2, 6.00);
+
+INSERT INTO ORDER_ITEM
+	(OrderNumber, ItemID, Price, ItemQuantity,
+	 ExtendedPrice)
+	VALUES (
+	00001, 004, 1.75, 2, 3.50);
+	
+INSERT INTO ORDER_ITEM
+	(OrderNumber, ItemID, Price, ItemQuantity,
+	 ExtendedPrice)
+	VALUES (
+	00002, 001, 3.00, 1, 3.00);
+	
+INSERT INTO ORDER_ITEM
+	(OrderNumber, ItemID, Price, ItemQuantity,
+	 ExtendedPrice)
+	VALUES (
+	00003, 006, 2.00, 1, 2.00);
+	
+INSERT INTO ORDER_ITEM
+	(OrderNumber, ItemID, Price, ItemQuantity,
+	 ExtendedPrice)
+	VALUES (
+	00003, 004, 1.75, 2, 3.50);
+	
+INSERT INTO ORDER_ITEM
+	(OrderNumber, ItemID,  Price, ItemQuantity,
+	 ExtendedPrice)
+	VALUES (
+	00004, 002, 3.75, 1, 3.75);
+
+INSERT INTO ORDER_ITEM
+	(OrderNumber, ItemID, Price, ItemQuantity,
+	 ExtendedPrice)
+	VALUES (
+	00004, 003, 2.50, 2, 5.00);
+	
+INSERT INTO ORDER_ITEM
+	(OrderNumber, ItemID, Price, ItemQuantity,
+	 ExtendedPrice)
+	VALUES (
+	00004, 006, 2.00, 1, 2.00);
+	
+INSERT INTO ORDER_ITEM
+	(OrderNumber, ItemID, Price, ItemQuantity,
+	 ExtendedPrice)
+	VALUES (
+	00005, 007, 3.00, 2, 6.00);
+
+/*            INSERT INTO INGREDIENT TABLE            */
+Create Sequence seqIngredientID Increment by 1 start with 101;
+INSERT INTO INGREDIENT
+(IngredientID, IngredientName, IngredientCategory, IngredientCost, QuantityOnHand)
+VALUES(seqIngredientID.NextVal, 'Ethical Coffee Beans', 'Coffee Beans', 0.55, 30);
+
+INSERT INTO INGREDIENT
+(IngredientID, IngredientName, IngredientCategory, IngredientCost, QuantityOnHand)
+VALUES(seqIngredientID.NextVal, 'Whole Milk', 'Dairy', 0.25, 15);
+
+INSERT INTO INGREDIENT
+(IngredientID, IngredientName, IngredientCategory, IngredientCost, QuantityOnHand)
+VALUES(seqIngredientID.NextVal, 'Coffee-mate Creamer', 'Coffee Creamers', 0.15, 15);
+
+INSERT INTO INGREDIENT
+(IngredientID, IngredientName, IngredientCategory, IngredientCost, QuantityOnHand)
+VALUES(seqIngredientID.NextVal, 'Filtered Water', 'Other', 0.20, 30);
+
+INSERT INTO INGREDIENT
+(IngredientID, IngredientName, IngredientCategory, IngredientCost, QuantityOnHand)
+VALUES(seqIngredientID.NextVal, 'Ice', 'Other', 0.10, 30);
+
+/*            INSERT INTO INGREDIENT_USE TABLE            */
+/* If we were to make this more efficient, we would have to bulk insert using another table to import it into the database */
+INSERT INTO INGREDIENT_USE
+(ItemID, IngredientID, AmountIngredientUsed)
+VALUES(001, 101, 3);
+
+INSERT INTO INGREDIENT_USE
+(ItemID, IngredientID, AmountIngredientUsed)
+VALUES(001, 104, 1);
+
+INSERT INTO INGREDIENT_USE
+(ItemID, IngredientID, AmountIngredientUsed)
+VALUES(002, 101, 2);
+
+INSERT INTO INGREDIENT_USE
+(ItemID, IngredientID, AmountIngredientUsed)
+VALUES(002, 103, 1);
+
+INSERT INTO INGREDIENT_USE
+(ItemID, IngredientID, AmountIngredientUsed)
+VALUES(002, 104, 1);
+
+INSERT INTO INGREDIENT_USE
+(ItemID, IngredientID, AmountIngredientUsed)
+VALUES(002, 105, 3);
+
+INSERT INTO INGREDIENT_USE
+(ItemID, IngredientID, AmountIngredientUsed)
+VALUES(003, 101, 1);
+
+INSERT INTO INGREDIENT_USE
+(ItemID, IngredientID, AmountIngredientUsed)
+VALUES(003, 104, 1);
+
+INSERT INTO INGREDIENT_USE
+(ItemID, IngredientID, AmountIngredientUsed)
+VALUES(004, 102, 3);
+
+/* COMMIT STATEMENT (FINAL STATEMENT)    */
+COMMIT;
